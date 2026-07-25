@@ -54,6 +54,8 @@ public class StatusBar extends CordovaPlugin {
 
     private AppCompatActivity activity;
     private Window window;
+    private int statusBarColor = Color.BLACK;
+    private boolean statusBarTransparent = false;
 
     /**
      * Sets the context of the Command. This can then be used to do things like
@@ -178,35 +180,36 @@ public class StatusBar extends CordovaPlugin {
             return;
         }
 
-        Window window = activity.getWindow();
+        statusBarColor = color;
+        applyStatusBarColor();
+    }
 
+    private void applyStatusBarColor() {
+        int color = statusBarTransparent ? Color.TRANSPARENT : statusBarColor;
+
+        Window window = activity.getWindow();
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS); // SDK 19-30
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS); // SDK 21
-        
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            View decorView = window.getDecorView();
-            decorView.setBackgroundColor(color);
-        } else {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             window.setStatusBarColor(color);
         }
     }
 
     private void setStatusBarTransparent(final boolean isTransparent) {
         final Window window = cordova.getActivity().getWindow();
-        int visibility = isTransparent
-            ? View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-            : View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_VISIBLE;
-
-        window.getDecorView().setSystemUiVisibility(visibility);
+        int visibility = window.getDecorView().getSystemUiVisibility();
+        visibility |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
 
         if (isTransparent) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-                View decorView = window.getDecorView();
-                decorView.setBackgroundColor(Color.TRANSPARENT);
-            } else {
-                window.setStatusBarColor(Color.TRANSPARENT);
-            }
+            visibility |= View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+        } else {
+            visibility &= ~View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
         }
+
+        window.getDecorView().setSystemUiVisibility(visibility);
+        statusBarTransparent = isTransparent;
+        applyStatusBarColor();
     }
 
     private void setStatusBarStyle(final String style) {
