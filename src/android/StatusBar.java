@@ -178,9 +178,17 @@ public class StatusBar extends CordovaPlugin {
             return;
         }
 
+        Window window = activity.getWindow();
+
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS); // SDK 19-30
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS); // SDK 21
-        window.setStatusBarColor(color);
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            View decorView = window.getDecorView();
+            decorView.setBackgroundColor(color);
+        } else {
+            window.setStatusBarColor(color);
+        }
     }
 
     private void setStatusBarTransparent(final boolean isTransparent) {
@@ -192,7 +200,12 @@ public class StatusBar extends CordovaPlugin {
         window.getDecorView().setSystemUiVisibility(visibility);
 
         if (isTransparent) {
-            window.setStatusBarColor(Color.TRANSPARENT);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                View decorView = window.getDecorView();
+                decorView.setBackgroundColor(Color.TRANSPARENT);
+            } else {
+                window.setStatusBarColor(Color.TRANSPARENT);
+            }
         }
     }
 
