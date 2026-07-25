@@ -24,6 +24,7 @@ import android.os.Build;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
@@ -56,6 +57,7 @@ public class StatusBar extends CordovaPlugin {
     private Window window;
     private int statusBarColor = Color.BLACK;
     private boolean statusBarTransparent = false;
+    private View statusBarScrimView;
 
     /**
      * Sets the context of the Command. This can then be used to do things like
@@ -191,13 +193,45 @@ public class StatusBar extends CordovaPlugin {
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS); // SDK 19-30
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS); // SDK 21
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            window.setStatusBarColor(Color.TRANSPARENT);
+            applyStatusBarScrim(color);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             window.setStatusBarColor(color);
         }
     }
 
+    private void applyStatusBarScrim(final int color) {
+        if (statusBarScrimView == null) {
+            statusBarScrimView = new View(activity);
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                getStatusBarHeightPx()
+            );
+            layoutParams.gravity = android.view.Gravity.TOP;
+            statusBarScrimView.setLayoutParams(layoutParams);
+            ((FrameLayout) window.getDecorView()).addView(statusBarScrimView);
+        }
+
+        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) statusBarScrimView.getLayoutParams();
+        layoutParams.height = getStatusBarHeightPx();
+        statusBarScrimView.setLayoutParams(layoutParams);
+        statusBarScrimView.setBackgroundColor(color);
+        statusBarScrimView.setVisibility(statusBarTransparent ? View.GONE : View.VISIBLE);
+    }
+
+    private int getStatusBarHeightPx() {
+        int resourceId = activity.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            return activity.getResources().getDimensionPixelSize(resourceId);
+        }
+        return 0;
+    }
+
     private void setStatusBarTransparent(final boolean isTransparent) {
         final Window window = cordova.getActivity().getWindow();
+        WindowCompat.setDecorFitsSystemWindows(window, !isTransparent);
+
         int visibility = window.getDecorView().getSystemUiVisibility();
         visibility |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
 
