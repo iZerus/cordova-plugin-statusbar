@@ -1,7 +1,7 @@
 {
   "name": "cordova-plugin-statusbar",
   "version": "4.0.1-dev",
-  "description": "Cordova StatusBar Plugin",
+  "description": "Cordova StatusBar Plugin Android 15 FIX",
   "types": "./types/index.d.ts",
   "cordova": {
     "id": "cordova-plugin-statusbar",
